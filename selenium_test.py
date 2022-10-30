@@ -99,7 +99,10 @@ def stop_driver(driver):
         return False
     
     return True
-    
+ 
+
+#this fct gets the prop_
+list for the folgios   
 def get_link(driver, link, t, args):
     try:
         driver.get(link)
@@ -216,7 +219,7 @@ def get_link(driver, link, t, args):
             
         
         try:
-            rows = driver.find_elements_by_xpath('//tr[contains(@class,"rigascura")]')
+            rows = driver.find_elements_by_xpath('//tr[contains(@class,"riga")]')
             print('len of rows is ',len(rows))
             print('type  of rows is ',type(rows))
 
@@ -229,6 +232,7 @@ def get_link(driver, link, t, args):
                     cols = row.find_elements_by_xpath("./td")
                     temp = [] # Temproary list
                     for col in cols:
+                        if(temp==[] and col.text!=''):temp.append('')
                         temp.append(col.text)
                     property_list.append(temp)            
                 else:
