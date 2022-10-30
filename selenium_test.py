@@ -154,7 +154,7 @@ def get_link(driver, link, t, args):
         t,val,tb = sys.exc_info()
         log(sys._getframe().f_code.co_name,'Elenco immobili link click failed: %s, %s, %s'% (t,val,tb))
         
-    foglios =[1,2]
+    foglios =[1]
     #args.foglio.split(',')
     for foglio in foglios:
         property_list = []
@@ -442,7 +442,7 @@ def get_final_data(driver, foglio, particella, subalterno):
                 log(sys._getframe().f_code.co_name,'select row radio click failed: %s, %s, %s'% (t,val,tb))
                 
             
-            try:
+            try:######bug
                 btn_intestati = driver.find_element_by_xpath('//input[@name="intestati" and @value="Intestati"]')
                 actions = ActionChains(driver)
                 actions.move_to_element(btn_intestati)
@@ -464,12 +464,21 @@ def get_final_data(driver, foglio, particella, subalterno):
                 temp2 = [] # Temproary list
                 for col2 in cols2:
                     temp2.append(col2.text)
+                print('printing temp2')
+                print(temp2)
                 ss = 0
+                #the bug is here
+                print('the bug is here : => ')
+                print(d2)
                 for k,v in d2.items():
+                    print('k val is => ',k)
+                    print('v val is => ', v )
                     if k:
                         z[k] = temp2[ss]
                     ss +=1
-                o.append(z.values())
+            o.append(z.values())
+            print(type(o))
+            print(o)
             script_dir = os.path.dirname(os.path.realpath('__file__'))
             rel_path = "files/foglio_%s_%s_%s_%d.csv" % (str(foglio),str(particella),str(subalterno), cc)
             abs_file_path = os.path.join(script_dir, rel_path)
