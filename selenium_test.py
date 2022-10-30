@@ -101,8 +101,7 @@ def stop_driver(driver):
     return True
  
 
-#this fct gets the prop_
-list for the folgios   
+#this fct gets the prop_list for the folgios   
 def get_link(driver, link, t, args):
     try:
         driver.get(link)
@@ -155,7 +154,8 @@ def get_link(driver, link, t, args):
         t,val,tb = sys.exc_info()
         log(sys._getframe().f_code.co_name,'Elenco immobili link click failed: %s, %s, %s'% (t,val,tb))
         
-    foglios =args.foglio.split(',')
+    foglios =[1,2]
+    #args.foglio.split(',')
     for foglio in foglios:
         property_list = []
         try:
