@@ -2,6 +2,8 @@ import random, logging, re, sys, os, random, base64, time, json, hashlib
 from urllib.parse import urlencode, quote_plus, unquote
 import requests
 import pandas as pd
+import glob
+import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.chrome.options import Options
+import numpy as np 
 #from screenshot import Screenshot as WASHOT
 import argparse
 import csv 
@@ -415,7 +418,9 @@ def get_final_data(driver, foglio, particella, subalterno):
         rows = driver.find_elements_by_xpath('//tr[contains(@class,"riga")]')
         for cc, row in enumerate(rows):
             z = {}
-            o = []
+            oo = []
+            o2=[]
+            df1=pd.DataFrame()
             cols = row.find_elements_by_xpath("./*[name()='th' or name()='td']")
             temp = [] # Temproary list
             for col in cols:
@@ -471,22 +476,73 @@ def get_final_data(driver, foglio, particella, subalterno):
                 print('the bug is here : => ')
                 print(d2)
                 for k,v in d2.items():
-                    print('k val is => ',k)
-                    print('v val is => ', v )
                     if k:
                         z[k] = temp2[ss]
+                    
                     ss +=1
-            o.append(z.values())
-            print(type(o))
-            print(o)
+                df1=df1.append(z, ignore_index=True)
+
+                print('printing z values',z)
+                oo.append(z.values())
+            print(type(oo))
+            print(oo)
+            print(df1)
+            mypath='files/csv/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.csv'
+            mypath2='files/excel/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.xlsx'
+            mypath3='files/csv/final_data_foglio_'+str(foglio)+'.csv'
+            mypath4='files/excel/final_data_foglio_'+str(foglio)+'.xlsx'
+
+            first_cols = ['Foglio','Particella','Sub']
+            last_cols = [col for col in df1.columns if col not in first_cols]
+            df1 = df1[first_cols+last_cols] 
+            print(df1)
+            df1.to_csv(mypath,index=False) 
+            df1.to_excel(mypath2,index=False) 
+            
+            print('excel file should have been created')
+            #ignore the creation with ozcans methode
+
             script_dir = os.path.dirname(os.path.realpath('__file__'))
             rel_path = "files/foglio_%s_%s_%s_%d.csv" % (str(foglio),str(particella),str(subalterno), cc)
+            ####grouping files to one foglio
+            files = glob.glob('files/csv/f_'+str(foglio)+'*.csv')
+            print(len(files))
+            files_nbr=0
+            part1_df=pd.DataFrame()
+            for f in files:
+                tdf=pd.read_csv(f)
+                if(tdf.shape[1]==16):
+            	    part1_df=part1_df.append(tdf)
+            	    files_nbr+=1
+                       
+            part2_df=pd.DataFrame()
+            for f in files:
+            	tdf=pd.read_csv(f)
+            	if(tdf.shape[1]==11):
+            		part2_df=part2_df.append(tdf)
+            		files_nbr+=1
+            missing_cols = [col for col in part1_df.columns if col not in part2_df.columns]
+            for missing_col in missing_cols:part2_df[str(missing_col)]=np.nan
+            final_df = pd.concat([part1_df, part2_df])
+            print('HERE IS THE FINAL DATAFRAME',final_df)
+            
+            
+            final_df.to_excel(mypath4,index=False) 
+            final_df.to_csv(mypath3,index=False)
+            print('foglio X file has been created ')
+
+            ##end of grouping 
+
+
             abs_file_path = os.path.join(script_dir, rel_path)
             log(sys._getframe().f_code.co_name,'abs_file_path: %s' % abs_file_path)
             with open(abs_file_path, "w") as f:
                 writer = csv.writer(f)
-                writer.writerows(o)
-                
+                writer.writerows(oo)
+
+
+   
+
             driver.execute_script("window.history.go(-1)")
             
     except:
@@ -571,6 +627,7 @@ def main():
             log(sys._getframe().f_code.co_name,'FINAL DATA aCTIONS failed: %s, %s, %s'% (t,val,tb))
         else:
             log(sys._getframe().f_code.co_name,'FINAL DATA aCTIONS failed')
+
     
     time.sleep(120)
     stoppped = stop_driver(driver)
