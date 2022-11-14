@@ -132,7 +132,16 @@ def get_link(driver, link, t, args):
         
     
     try:
-        driver.find_element_by_xpath('//select[@name="listacom"]/option[contains(text(),"BOLOGNA Territorio")]').click()
+    	#adding the option selection feature : 
+        list_options=driver.find_elements_by_xpath('//select[@name="listacom"]/option')
+        for option in list_options: print(option.text)
+        option_selection1=input('Please SELECt an option from the list above ==> ')
+        
+
+        thestuf='"'
+
+
+        driver.find_element_by_xpath('//select[@name="listacom"]/option[contains(text(),'+thestuf+option_selection1+thestuf+')]').click()
         time.sleep(3)
         log(sys._getframe().f_code.co_name,'bologna selection click is ok: %s'% login_link_tab)
     except:
@@ -157,7 +166,7 @@ def get_link(driver, link, t, args):
         t,val,tb = sys.exc_info()
         log(sys._getframe().f_code.co_name,'Elenco immobili link click failed: %s, %s, %s'% (t,val,tb))
         
-    foglios =[1]
+    foglios =args.foglio.split(',')
     #args.foglio.split(',')
     for foglio in foglios:
         property_list = []
@@ -170,7 +179,12 @@ def get_link(driver, link, t, args):
             log(sys._getframe().f_code.co_name,'catasto selection link failed: %s, %s, %s'% (t,val,tb))
             
         try:
-            driver.find_element_by_xpath('//select[@name="comuneCat"]/option[contains(@value,"A944#BOLOGNA")]').click()
+            list_options2=driver.find_elements_by_xpath('//select[@name="comuneCat"]/option')
+            for option in list_options2: print(option.text)
+            option_selection2=input('Please SELECt an option from the list above ==> ')
+        	
+
+            driver.find_element_by_xpath('//select[@name="comuneCat"]/option[contains(@value,'+thestuf+option_selection2+thestuf+')]').click()
             time.sleep(3)
             log(sys._getframe().f_code.co_name,'commune selection click is ok: %s'% login_link_tab)
         except:
@@ -249,13 +263,13 @@ def get_link(driver, link, t, args):
         rel_path = "files/foglio_%s.csv" % str(foglio)
         abs_file_path = os.path.join(script_dir, rel_path)
         log(sys._getframe().f_code.co_name,'abs_file_path: %s' % abs_file_path)
-        with open(abs_file_path, "w") as f:
-            writer = csv.writer(f)
-            writer.writerows(property_list)
+       # with open(abs_file_path, "w") as f:
+           # writer = csv.writer(f)
+           # writer.writerows(property_list)
 
         print('the type of the property_list is => ',type(property_list))
         print('the len of the property_list is => ',len(property_list))
-        print('property_list[0] => ',property_list[0])
+        #print('property_list[0] => ',property_list[0])
         #prop list
 
 
@@ -263,6 +277,7 @@ def get_link(driver, link, t, args):
         print('property_list has been generated ')
 
         df.to_csv('property_list.csv')
+        df.to_csv(abs_file_path)
         df.to_excel('property_list.xlsx')
 
             
@@ -350,7 +365,7 @@ def get_final_data(driver, foglio, particella, subalterno):
         log(sys._getframe().f_code.co_name,'catasto selection link failed: %s, %s, %s'% (t,val,tb))
         
     try:
-        driver.find_element_by_xpath('//select[@name="denomComune"]/option[contains(@value,"A944#BOLOGNA")]').click()
+        driver.find_element_by_xpath('//select[@name="denomComune"]/option[contains(@value,'+thestuf+option_selection2+thestuf+')]').click()
         time.sleep(3)
         log(sys._getframe().f_code.co_name,'denomComune selection click is ok: %s'% 'Fabbricati')
     except:
@@ -484,9 +499,8 @@ def get_final_data(driver, foglio, particella, subalterno):
 
                 print('printing z values',z)
                 oo.append(z.values())
-            print(type(oo))
-            print(oo)
-            print(df1)
+
+            
             mypath='files/csv/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.csv'
             mypath2='files/excel/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.xlsx'
             mypath3='files/csv/final_data_foglio_'+str(foglio)+'.csv'
@@ -561,7 +575,7 @@ def main():
     driver = get_driver()
     login(driver)
     property_list_csv = get_link(driver, action_link, 10, args)
-    print('Property list',property_list_csv)
+    #print('Property list',property_list_csv)
     
     try:
         foglios = args.foglio.split(',')
