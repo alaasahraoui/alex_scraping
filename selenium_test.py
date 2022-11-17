@@ -2,8 +2,6 @@ import random, logging, re, sys, os, random, base64, time, json, hashlib
 from urllib.parse import urlencode, quote_plus, unquote
 import requests
 import pandas as pd
-import glob
-import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -12,7 +10,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.chrome.options import Options
-import numpy as np 
 #from screenshot import Screenshot as WASHOT
 import argparse
 import csv 
@@ -30,7 +27,7 @@ input_username = '//input[@id="username-sister"]'
 input_passw = '//input[@id="password-sister"]'
 btn_passw = '//div[@id="tab-sister"]//button[contains(@class,"btn-accedi")]'
 property_list = []
- 
+option_selection1=input('what Territorio do you want to scrape ? ')
 
 def log(f,msg):
     print("%s ==> %s" %(f,msg))
@@ -132,18 +129,9 @@ def get_link(driver, link, t, args):
         
     
     try:
-    	#adding the option selection feature : 
-        list_options=driver.find_elements_by_xpath('//select[@name="listacom"]/option')
-        for option in list_options: print(option.text)
-        option_selection1=input('Please SELECt an option from the list above ==> ')
-        
-
-        thestuf='"'
-
-
-        driver.find_element_by_xpath('//select[@name="listacom"]/option[contains(text(),'+thestuf+option_selection1+thestuf+')]').click()
+        driver.find_element_by_xpath('//select[@name="listacom"]/option[contains(text(),"'+option_selection1+'")]').click()
         time.sleep(3)
-        log(sys._getframe().f_code.co_name,'bologna selection click is ok: %s'% login_link_tab)
+        log(sys._getframe().f_code.co_name,'selection 1 is ok   click is ok: %s'% login_link_tab)
     except:
         t,val,tb = sys.exc_info()
         log(sys._getframe().f_code.co_name,'bologna selection link failed: %s, %s, %s'% (t,val,tb))
@@ -165,7 +153,7 @@ def get_link(driver, link, t, args):
     except:
         t,val,tb = sys.exc_info()
         log(sys._getframe().f_code.co_name,'Elenco immobili link click failed: %s, %s, %s'% (t,val,tb))
-        
+        #fixred
     foglios =args.foglio.split(',')
     #args.foglio.split(',')
     for foglio in foglios:
@@ -179,12 +167,7 @@ def get_link(driver, link, t, args):
             log(sys._getframe().f_code.co_name,'catasto selection link failed: %s, %s, %s'% (t,val,tb))
             
         try:
-            list_options2=driver.find_elements_by_xpath('//select[@name="comuneCat"]/option')
-            for option in list_options2: print(option.text)
-            option_selection2=input('Please SELECt an option from the list above ==> ')
-        	
-
-            driver.find_element_by_xpath('//select[@name="comuneCat"]/option[contains(@value,'+thestuf+option_selection2+thestuf+')]').click()
+            driver.find_element_by_xpath('//select[@name="comuneCat"]/option[contains(@value,"'+option_selection1+'")]').click()
             time.sleep(3)
             log(sys._getframe().f_code.co_name,'commune selection click is ok: %s'% login_link_tab)
         except:
@@ -239,9 +222,15 @@ def get_link(driver, link, t, args):
             rows = driver.find_elements_by_xpath('//tr[contains(@class,"riga")]')
             print('len of rows is ',len(rows))
             print('type  of rows is ',type(rows))
+            #for refreshing the browser
+            ii=1
 
             for row in rows:
+
+                if(ii%50==0):driver.refresh();input('50 row are done , type ok  to prevent the end of the sessions')
+
                 try:
+                    ii+=1
                     correct_row = row.find_element_by_xpath('//td[@class="centrato"]')
                 except:
                     correct_row = False
@@ -263,13 +252,13 @@ def get_link(driver, link, t, args):
         rel_path = "files/foglio_%s.csv" % str(foglio)
         abs_file_path = os.path.join(script_dir, rel_path)
         log(sys._getframe().f_code.co_name,'abs_file_path: %s' % abs_file_path)
-       # with open(abs_file_path, "w") as f:
-           # writer = csv.writer(f)
-           # writer.writerows(property_list)
+        with open(abs_file_path, "w") as f:
+            writer = csv.writer(f)
+            writer.writerows(property_list)
 
         print('the type of the property_list is => ',type(property_list))
         print('the len of the property_list is => ',len(property_list))
-        #print('property_list[0] => ',property_list[0])
+        print('property_list[0] => ',property_list[0])
         #prop list
 
 
@@ -277,7 +266,6 @@ def get_link(driver, link, t, args):
         print('property_list has been generated ')
 
         df.to_csv('property_list.csv')
-        df.to_csv(abs_file_path)
         df.to_excel('property_list.xlsx')
 
             
@@ -365,7 +353,7 @@ def get_final_data(driver, foglio, particella, subalterno):
         log(sys._getframe().f_code.co_name,'catasto selection link failed: %s, %s, %s'% (t,val,tb))
         
     try:
-        driver.find_element_by_xpath('//select[@name="denomComune"]/option[contains(@value,'+thestuf+option_selection2+thestuf+')]').click()
+        driver.find_element_by_xpath('//select[@name="denomComune"]/option[contains(@value,"'+option_selection1+'")]').click()
         time.sleep(3)
         log(sys._getframe().f_code.co_name,'denomComune selection click is ok: %s'% 'Fabbricati')
     except:
@@ -433,9 +421,7 @@ def get_final_data(driver, foglio, particella, subalterno):
         rows = driver.find_elements_by_xpath('//tr[contains(@class,"riga")]')
         for cc, row in enumerate(rows):
             z = {}
-            oo = []
-            o2=[]
-            df1=pd.DataFrame()
+            o = []
             cols = row.find_elements_by_xpath("./*[name()='th' or name()='td']")
             temp = [] # Temproary list
             for col in cols:
@@ -484,79 +470,26 @@ def get_final_data(driver, foglio, particella, subalterno):
                 temp2 = [] # Temproary list
                 for col2 in cols2:
                     temp2.append(col2.text)
-                print('printing temp2')
-                print(temp2)
+
                 ss = 0
                 #the bug is here
                 print('the bug is here : => ')
-                print(d2)
+
                 for k,v in d2.items():
+
                     if k:
                         z[k] = temp2[ss]
-                    
                     ss +=1
-                df1=df1.append(z, ignore_index=True)
-
-                print('printing z values',z)
-                oo.append(z.values())
-
-            
-            mypath='files/csv/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.csv'
-            mypath2='files/excel/f_'+str(foglio)+'_'+str(particella)+'_'+str(subalterno)+'.xlsx'
-            mypath3='files/csv/final_data_foglio_'+str(foglio)+'.csv'
-            mypath4='files/excel/final_data_foglio_'+str(foglio)+'.xlsx'
-
-            first_cols = ['Foglio','Particella','Sub']
-            last_cols = [col for col in df1.columns if col not in first_cols]
-            df1 = df1[first_cols+last_cols] 
-            print(df1)
-            df1.to_csv(mypath,index=False) 
-            df1.to_excel(mypath2,index=False) 
-            
-            print('excel file should have been created')
-            #ignore the creation with ozcans methode
-
+            o.append(z.values())
+            print(type(o))
             script_dir = os.path.dirname(os.path.realpath('__file__'))
             rel_path = "files/foglio_%s_%s_%s_%d.csv" % (str(foglio),str(particella),str(subalterno), cc)
-            ####grouping files to one foglio
-            files = glob.glob('files/csv/f_'+str(foglio)+'*.csv')
-            print(len(files))
-            files_nbr=0
-            part1_df=pd.DataFrame()
-            for f in files:
-                tdf=pd.read_csv(f)
-                if(tdf.shape[1]==16):
-            	    part1_df=part1_df.append(tdf)
-            	    files_nbr+=1
-                       
-            part2_df=pd.DataFrame()
-            for f in files:
-            	tdf=pd.read_csv(f)
-            	if(tdf.shape[1]==11):
-            		part2_df=part2_df.append(tdf)
-            		files_nbr+=1
-            missing_cols = [col for col in part1_df.columns if col not in part2_df.columns]
-            for missing_col in missing_cols:part2_df[str(missing_col)]=np.nan
-            final_df = pd.concat([part1_df, part2_df])
-            print('HERE IS THE FINAL DATAFRAME',final_df)
-            
-            
-            final_df.to_excel(mypath4,index=False) 
-            final_df.to_csv(mypath3,index=False)
-            print('foglio X file has been created ')
-
-            ##end of grouping 
-
-
             abs_file_path = os.path.join(script_dir, rel_path)
             log(sys._getframe().f_code.co_name,'abs_file_path: %s' % abs_file_path)
             with open(abs_file_path, "w") as f:
                 writer = csv.writer(f)
-                writer.writerows(oo)
-
-
-   
-
+                writer.writerows(o)
+                
             driver.execute_script("window.history.go(-1)")
             
     except:
@@ -575,7 +508,7 @@ def main():
     driver = get_driver()
     login(driver)
     property_list_csv = get_link(driver, action_link, 10, args)
-    #print('Property list',property_list_csv)
+    print('Property list',property_list_csv)
     
     try:
         foglios = args.foglio.split(',')
@@ -641,7 +574,6 @@ def main():
             log(sys._getframe().f_code.co_name,'FINAL DATA aCTIONS failed: %s, %s, %s'% (t,val,tb))
         else:
             log(sys._getframe().f_code.co_name,'FINAL DATA aCTIONS failed')
-
     
     time.sleep(120)
     stoppped = stop_driver(driver)
